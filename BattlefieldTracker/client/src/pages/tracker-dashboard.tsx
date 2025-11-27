@@ -75,8 +75,9 @@ export default function TrackerDashboard({
       });
     }
 
-    // Fetch initial soldier locations
-    fetch("/api/locations/latest")
+    // Fetch initial soldier locations (respect VITE_API_URL if provided)
+    const apiBase = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") || "";
+    fetch(`${apiBase}/api/locations/latest`)
       .then((res) => res.json())
       .then((locations) => {
         const soldierData: SoldierData[] = locations.map((loc: any) => ({

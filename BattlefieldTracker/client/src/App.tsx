@@ -19,8 +19,10 @@ function App() {
   // Initialize WebSocket connection
   useEffect(() => {
     if (currentUser) {
-      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      // Prefer an explicit WS URL from environment (useful when frontend is on Vercel
+      // and backend runs elsewhere). Fall back to same-origin /ws when not set.
+      const envWs = import.meta.env.VITE_WS_URL as string | undefined;
+      const wsUrl = envWs || `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/ws`;
 
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
