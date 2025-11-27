@@ -1,0 +1,15 @@
+.venv
+node_modules
+dist
+.git
+.github
+.vscode
+npm-debug.log
+.DS_Store
+client/node_modules
+**/node_modules
+*.log
+coverage
+/.idea
+/.cache
+tmp
