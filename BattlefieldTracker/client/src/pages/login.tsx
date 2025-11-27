@@ -38,7 +38,12 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
   async function onSubmit(data: LoginCredentials) {
     setIsLoading(true);
     try {
-      const endpoint = isRegister ? "/api/auth/register" : "/api/auth/login";
+      const apiBase = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+      const endpoint = apiBase
+        ? `${apiBase}/api/auth/${isRegister ? "register" : "login"}`
+        : isRegister
+        ? "/api/auth/register"
+        : "/api/auth/login";
       const payload = isRegister ? { ...data, role } : data;
       
       const result = await apiRequest("POST", endpoint, payload);
