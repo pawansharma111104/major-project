@@ -23,85 +23,82 @@ function App() {
     useRef<WebSocket | null>(null);
 
   // Initialize WebSocket connection
-  useEffect(() => {
-    if (currentUser) {
-      const envWs =
-        import.meta.env
-          .VITE_WS_URL as
-          | string
-          | undefined;
+// Initialize WebSocket connection
+useEffect(() => {
+  if (!currentUser) return;
 
-      const wsUrl =
-        envWs ||
-        `${
-          window.location
-            .protocol ===
-          "https:"
-            ? "wss:"
-            : "ws:"
-        }//${
-          window.location.host
-        }/ws`;
+  // PRODUCTION RENDER WS
+  const productionWs =
+    "wss://battlefield-backend-g1f2.onrender.com/ws";
 
-      const ws = new WebSocket(
-        wsUrl
-      );
+  // LOCALHOST DEV WS
+  const localWs =
+    "ws://localhost:5000/ws";
 
-      wsRef.current = ws;
+  // AUTO SWITCH
+  const wsUrl =
+    window.location.hostname ===
+    "localhost"
+      ? localWs
+      : productionWs;
 
-      ws.onopen = () => {
-        console.log(
-          "WebSocket connected"
-        );
+  const ws =
+    new WebSocket(wsUrl);
 
-        setWebsocket(ws);
+  wsRef.current = ws;
 
-        // REGISTER USER
-        ws.send(
-          JSON.stringify({
-            type: "register",
+  ws.onopen = () => {
+    console.log(
+      "WebSocket connected"
+    );
 
-            data: {
-              userId:
-                currentUser.id,
+    setWebsocket(ws);
 
-              codename:
-                currentUser.codename,
+    // REGISTER USER
+    ws.send(
+      JSON.stringify({
+        type: "register",
 
-              role:
-                currentUser.role,
-            },
-          })
-        );
-      };
+        data: {
+          userId:
+            currentUser.id,
 
-      ws.onclose = () => {
-        console.log(
-          "WebSocket disconnected"
-        );
+          codename:
+            currentUser.codename,
 
-        setWebsocket(null);
-      };
+          role:
+            currentUser.role,
+        },
+      })
+    );
+  };
 
-      ws.onerror = (
-        error
-      ) => {
-        console.error(
-          "WebSocket error:",
-          error
-        );
-      };
+  ws.onclose = () => {
+    console.log(
+      "WebSocket disconnected"
+    );
 
-      return () => {
-        if (
-          ws.readyState ===
-          WebSocket.OPEN
-        ) {
-          ws.close();
-        }
-      };
+    setWebsocket(null);
+  };
+
+  ws.onerror = (
+    error
+  ) => {
+    console.error(
+      "WebSocket error:",
+      error
+    );
+  };
+
+  return () => {
+    if (
+      ws.readyState ===
+      WebSocket.OPEN
+    ) {
+      ws.close();
     }
-  }, [currentUser]);
+  };
+}, [currentUser]);
 
   const handleLogout = () => {
     if (

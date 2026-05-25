@@ -1,26 +1,67 @@
-import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import {
+  QueryClient,
+  QueryFunction,
+} from "@tanstack/react-query";
 
-async function throwIfResNotOk(res: Response) {
+// RENDER BACKEND
+const API_BASE =
+  window.location.hostname ===
+  "localhost"
+    ? ""
+    : "https://battlefield-backend-g1f2.onrender.com";
+
+async function throwIfResNotOk(
+  res: Response
+) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    const text =
+      (await res.text()) ||
+      res.statusText;
+
+    throw new Error(
+      `${res.status}: ${text}`
+    );
   }
 }
 
 export async function apiRequest(
   method: string,
   url: string,
-  data?: unknown | undefined,
+  data?:
+    | unknown
+    | undefined
 ): Promise<any> {
-  const res = await fetch(url, {
-    method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
+  const fullUrl =
+    `${API_BASE}${url}`;
 
-  await throwIfResNotOk(res);
-  // return parsed JSON payload for convenience (login/register expect JSON)
+  const res =
+    await fetch(
+      fullUrl,
+      {
+        method,
+
+        headers: data
+          ? {
+              "Content-Type":
+                "application/json",
+            }
+          : {},
+
+        body: data
+          ? JSON.stringify(
+              data
+            )
+          : undefined,
+
+        credentials:
+          "include",
+      }
+    );
+
+  await throwIfResNotOk(
+    res
+  );
+
   try {
     return await res.json();
   } catch {
@@ -28,35 +69,76 @@ export async function apiRequest(
   }
 }
 
-type UnauthorizedBehavior = "returnNull" | "throw";
-export const getQueryFn: <T>(options: {
-  on401: UnauthorizedBehavior;
-}) => QueryFunction<T> =
-  ({ on401: unauthorizedBehavior }) =>
-  async ({ queryKey }) => {
-    const res = await fetch(queryKey.join("/") as string, {
-      credentials: "include",
-    });
+type UnauthorizedBehavior =
+  | "returnNull"
+  | "throw";
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+export const getQueryFn:
+  <T>(options: {
+    on401: UnauthorizedBehavior;
+  }) => QueryFunction<T> =
+  ({
+    on401:
+      unauthorizedBehavior,
+  }) =>
+  async ({
+    queryKey,
+  }) => {
+    const fullUrl =
+      `${API_BASE}/${queryKey.join(
+        "/"
+      )}`;
+
+    const res =
+      await fetch(
+        fullUrl,
+        {
+          credentials:
+            "include",
+        }
+      );
+
+    if (
+      unauthorizedBehavior ===
+        "returnNull" &&
+      res.status === 401
+    ) {
       return null;
     }
 
-    await throwIfResNotOk(res);
+    await throwIfResNotOk(
+      res
+    );
+
     return await res.json();
   };
 
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      queryFn: getQueryFn({ on401: "throw" }),
-      refetchInterval: false,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
+export const queryClient =
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        queryFn:
+          getQueryFn(
+            {
+              on401:
+                "throw",
+            }
+          ),
+
+        refetchInterval:
+          false,
+
+        refetchOnWindowFocus:
+          false,
+
+        staleTime:
+          Infinity,
+
+        retry: false,
+      },
+
+      mutations: {
+        retry: false,
+      },
     },
-    mutations: {
-      retry: false,
-    },
-  },
-});
+  });
